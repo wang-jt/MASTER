@@ -142,6 +142,7 @@ class SequenceModel():
         test_loader = self._init_data_loader(dl_test, shuffle=False, drop_last=False)
 
         preds = []
+        targets = []
         ic = []
         ric = []
 
@@ -153,12 +154,14 @@ class SequenceModel():
             with torch.no_grad():
                 pred = self.model(feature.float()).detach().cpu().numpy()
             preds.append(pred.ravel())
-
-            daily_ic, daily_ric = calc_ic(pred, label.detach().numpy())
+            label = label.detach().numpy()
+            targets.append(label)
+            daily_ic, daily_ric = calc_ic(pred, label)
             ic.append(daily_ic)
             ric.append(daily_ric)
 
         predictions = pd.Series(np.concatenate(preds), index=dl_test.get_index())
+        targets = pd.Series(np.concatenate(targets), index=dl_test.get_index())
 
         metrics = {
             'IC': np.mean(ic),
@@ -167,4 +170,4 @@ class SequenceModel():
             'RICIR': np.mean(ric)/np.std(ric)
         }
 
-        return predictions, metrics
+        return predictions, metrics, targets
