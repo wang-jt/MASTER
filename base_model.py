@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import copy
-
+from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.utils.data import Sampler
 import torch
@@ -124,13 +124,15 @@ class SequenceModel():
 
         self.fitted = True
         best_param = None
-        for step in range(self.n_epochs):
+        best_val,early_stop_cnt,early_stop = 0.0, 0, 3
+        for step in tqdm(range(self.n_epochs), desc="Training Progress"):
             train_loss = self.train_epoch(train_loader)
             val_loss = self.test_epoch(valid_loader)
-
-            print("Epoch %d, train_loss %.6f, valid_loss %.6f " % (step, train_loss, val_loss))
+            tqdm.write("Epoch %d, train_loss %.6f, valid_loss %.6f" % (step, train_loss, val_loss)) #print("Epoch %d, train_loss %.6f, valid_loss %.6f " % (step, train_loss, val_loss))
             best_param = copy.deepcopy(self.model.state_dict())
-
+            if val_loss < best_val: val_loss, early_stop_cnt = best_val, 0
+            else: early_stop_cnt += 1
+            if early_stop_cnt >= early_stop: break
             if train_loss <= self.train_stop_loss_thred:
                 break
         torch.save(best_param, f'{self.save_path}{self.save_prefix}master_{self.seed}.pkl')

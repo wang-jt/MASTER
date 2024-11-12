@@ -42,8 +42,11 @@ model = MASTERModel(
 if not Load_And_Test:
     model.fit(dl_train, dl_valid)
     print("Model Trained.")
-    predictions, metrics = model.predict(dl_test)
+    predictions, metrics, targets = model.predict(dl_test)
     print(metrics)
+    from plot import plot_predictions_vs_target as ppt, plot_multiple_stocks as pms
+    for s_code in ['SH601318', 'SH601939', 'SH601995', 'SH601857']:
+        ppt(predictions, targets, s_code, 'Market-All', universe)
 else:
     # Load and Test
     param_path = f'/usr/wjt/master/model/{universe}master_0.pkl'
